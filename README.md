@@ -1,79 +1,222 @@
-# VerdictBox
+# VerdictBox — AI Moderation & Debate Platform
 
 <p align="center">
-  <img src="docs/assets/banner.png" alt="VerdictBox Banner" width="100%">
+  <img src="docs/assets/banner.svg" alt="VerdictBox Banner" width="100%">
 </p>
 
 <p align="center">
-  <a href="#-demo"><img src="https://img.shields.io/badge/Live%20Preview-Available-00C853?style=for-the-badge&logo=vercel" alt="Live Preview"></a>
-  <a href="#-features"><img src="https://img.shields.io/badge/AI%20Moderation-Enabled-1976D2?style=for-the-badge&logo=openai" alt="AI Moderation"></a>
-  <a href="#-setup"><img src="https://img.shields.io/badge/Flask-App-000000?style=for-the-badge&logo=flask" alt="Flask"></a>
-  <a href="#-database"><img src="https://img.shields.io/badge/MySQL-Database-4479A1?style=for-the-badge&logo=mysql" alt="MySQL"></a>
+  <a href="#demo"><img src="https://img.shields.io/badge/Live%20Preview-Local%20Host-00C853?style=for-the-badge" alt="Local preview"></a>
+  <a href="#features"><img src="https://img.shields.io/badge/AI%20Analysis-Toxicity%20%7C%20Fallacies-1976D2?style=for-the-badge" alt="AI"></a>
+  <a href="#quick-start"><img src="https://img.shields.io/badge/Flask-Backend-000000?style=for-the-badge&logo=flask" alt="Flask"></a>
+  <a href="#database--schema"><img src="https://img.shields.io/badge/MySQL-Database-4479A1?style=for-the-badge&logo=mysql" alt="MySQL"></a>
 </p>
 
+<p align="center"><strong>Maintainers:</strong> Umais Ahmed (24K-1003) • Abeer Siddiqui (24K-0538) • Musab Sheikh (24K-0862)</p>
+
+VerdictBox is a web-based debate and moderation platform that leverages machine learning to analyze arguments, detect harmful content, identify logical fallacies, and generate AI-assisted verdicts. It combines structured debates, automated moderation, and community-driven engagement into a single platform.
+
+---
+
+## Table of Contents
+
+* [Demo](#demo)
+* [Why VerdictBox](#why-verdictbox)
+* [Features](#features)
+* [Application Screenshots](#-application-screenshots)
+* [Quick Start](#quick-start)
+* [Architecture & Tech](#architecture--tech)
+* [ML Pipeline](#ml-pipeline)
+* [Database & Schema](#database--schema)
+* [API & Routes](#api--routes-key-endpoints)
+* [Suggested Demo Checklist](#suggested-demo-checklist-for-recruiters)
+* [Credits & License](#credits--license)
+
+---
+
+## Demo
+
+Run locally and open `http://localhost:5000` for a full preview.
+
+For presentations and demonstrations, consider replacing the banner with a short GIF (`docs/assets/demo.gif`) showcasing the dispute creation → submission → verdict workflow.
+
+---
+
+## Why VerdictBox
+
+* Structured debates with evidence-based discussions
+* AI-assisted verdict generation and moderation
+* Detection of toxicity, sarcasm, sentiment, and logical fallacies
+* Appeals and moderation workflows for fairness
+* Educational value for classrooms and debate communities
+* Reputation, badges, and leaderboard systems for engagement
+
+---
+
+## Features
+
+* Real-time dispute lifecycle: create, submit, resolve, and appeal
+* Machine learning pipeline for argument analysis
+* Public and private dispute modes
+* Community reporting and moderation tools
+* Automated flagging and escalation workflows
+* Leaderboards, badges, and reputation tracking
+* Administrative audit logs and appeal reviews
+* Analytics dashboard with insights and summaries
+
+---
+
+## 📸 Application Screenshots
+
+### 🏠 Home Feed, Search & Discovery
+
+Browse active disputes, search discussions, and explore trending debates across the platform.
+
 <p align="center">
-  <b>VerdictBox</b> is an AI-powered dispute resolution platform where users create debates, submit arguments, receive machine-assisted verdicts, and interact through comments, reports, appeals, badges, leaderboards, and analytics.
+  <img src="https://github.com/user-attachments/assets/0ceb9255-060d-4f04-b538-dcc598856728" width="900">
+</p>
+
+### ➕ Create a Dispute
+
+Create structured debates by defining the topic, description, and participants.
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/eba88162-4ed4-4b9a-aa1a-23d99e1e1a83" width="900">
+</p>
+
+### 📋 Dispute Directory
+
+View ongoing and completed disputes with status tracking and participant information.
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/f6bbb32e-3488-4e18-8c00-c4bf86b0a107" width="900">
+</p>
+
+### ⚖️ AI Verdict & Analysis
+
+Detailed verdict page displaying confidence scores, AI reasoning, sentiment analysis, and fallacy detection results.
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/d51c763f-9f08-4930-a8ad-1ed7c96193f3" width="900">
+</p>
+
+### 🏆 Leaderboard & Rankings
+
+Track top-performing users through the reputation and ranking system.
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/6fcf42ee-408f-43ac-aa50-31b27c35abda" width="900">
+</p>
+
+### 📊 User Dashboard
+
+Personalized dashboard providing activity insights, dispute history, and user statistics.
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/0f2fd5c1-05b9-435a-a51a-0daeeae48af0" width="900">
+</p>
+
+## 🛡️ Administration & Moderation
+
+### 🚩 Flagged Issues Management
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/74ed2bb4-9cfc-488f-a99c-461155420599" width="900">
+</p>
+
+### 📝 Administrative Audit Logs
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/e8ccebee-ba77-4669-9704-959e52572990" width="900">
+</p>
+
+### 🔄 Pending Appeals Queue
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/8daf9581-e7db-440e-b2ce-0dc47c24a85b" width="900">
 </p>
 
 ---
 
-## ✨ Overview
+## Quick Start
 
-VerdictBox combines debate management, community moderation, and machine learning in one platform. It supports both public and private disputes, automated verdict generation, moderation workflows, and user reputation features.
+### 1. Clone the Repository
 
-## 🎯 Key Features
+```powershell
+git clone <your-repo-url>
+cd verdictbox
+```
 
-- 🤖 AI verdict generation using toxicity, sentiment, sarcasm, and fallacy analysis
-- 🧠 Full dispute lifecycle from creation to resolution
-- 💬 Public and private comments
-- 🗳️ Spectator engagement voting for public disputes
-- 🚩 Report and escalation system for moderation
-- 🔁 Appeals workflow for disputants
-- 🏆 Badges, reputation, and leaderboard ranking
-- 📊 Statistics dashboard with charts and insights
-- 🔒 Public and private moderation modes
+### 2. Create & Activate a Virtual Environment
 
-## 🖼️ Screenshots
+```powershell
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+```
 
-<p align="center">
-  <img src="docs/assets/screenshot-home.png" alt="Home Screen" width="48%">
-  <img src="docs/assets/screenshot-dispute.png" alt="Dispute Screen" width="48%">
-</p>
+### 3. Install Dependencies
 
-<p align="center">
-  <img src="docs/assets/screenshot-verdict.png" alt="Verdict Screen" width="48%">
-  <img src="docs/assets/screenshot-dashboard.png" alt="Dashboard Screen" width="48%">
-</p>
+```powershell
+pip install --upgrade pip
+pip install -r requirements.txt
+```
 
-> Add your real screenshots inside `docs/assets/` and keep these file names for the cleanest GitHub preview.
+### 4. Configure Environment Variables
 
-## 🎥 Video Preview
+Create `config/.env`:
 
-<p align="center">
-  <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID">
-    <img src="docs/assets/video-preview.png" alt="Watch the VerdictBox demo" width="85%">
-  </a>
-</p>
+```env
+DATABASE_URL=mysql+pymysql://root:YOUR_PASSWORD@localhost/verdictbox
+SECRET_KEY=replace-with-random-secret
+```
 
-> Replace the link above with your demo video and the image with a thumbnail or GIF preview.
+### 5. Initialize & Seed the Database
 
-## 🚀 Demo Flow
+```powershell
+.\run_project.ps1 -InitDb -SeedDb
+```
 
-1. Register or log in
-2. Create or join a dispute
-3. Submit arguments
-4. Wait for the AI verdict
-5. Comment, vote, report, or appeal depending on your role
+### 6. Run the Application
 
-## 🛠️ Tech Stack
+```powershell
+python app.py
+```
 
-- **Frontend:** HTML, CSS, JavaScript, Jinja2
-- **Backend:** Flask, Flask-Login, SQLAlchemy
-- **Database:** MySQL
-- **AI/ML:** Python ML pipeline for verdict scoring
-- **Libraries:** pandas, NumPy, scikit-learn, and related Python packages
+Open:
 
-## 📁 Project Structure
+```text
+http://localhost:5000
+```
+
+---
+
+## Architecture & Tech
+
+### Backend
+
+* Flask
+* Flask-Login
+* SQLAlchemy
+
+### Database
+
+* MySQL
+* SQL Scripts
+* Stored Procedures
+* Triggers
+
+### Machine Learning
+
+* Scikit-learn
+* Pandas
+* NumPy
+
+### Frontend
+
+* Jinja2 Templates
+* Vanilla JavaScript
+* CSS
+
+### Project Structure
 
 ```text
 verdictbox/
@@ -88,58 +231,55 @@ verdictbox/
 └── utils/
 ```
 
-## ⚙️ Setup
+---
 
-### 1) Install dependencies
+## ML Pipeline
 
-```powershell
-pip install -r requirements.txt
+The central function `run_full_pipeline()` processes dispute submissions and returns structured results including:
+
+* Toxicity analysis
+* Sentiment analysis
+* Sarcasm detection
+* Logical fallacy detection
+* Confidence scoring
+* Winner prediction
+* AI-generated reasoning
+
+Possible statuses:
+
+* `resolved`
+* `flagged`
+* `error`
+
+Flagged content automatically triggers moderation workflows and administrative review.
+
+---
+
+## Database & Schema
+
+Key database design features include:
+
+* One submission per participant using unique constraints
+* Structured storage of AI verdicts and ML outputs
+* Community reports and automated system flags
+* Appeal management workflows
+* Automated moderation escalation through triggers
+
+Additional database documentation is available in:
+
+## Credits & License
+
+Made with ❤️ by the VerdictBox Team.
+
+### Team Members
+
+* **Umais Ahmed** (24K-1003)
+* **Abeer Siddiqui** (24K-0538)
+* **Musab Sheikh** (24K-0862)
+
+### License
+
+This project is licensed under the MIT License. See the `LICENSE` file for details.
+
 ```
-
-### 2) Configure environment
-
-Create `config/.env` and add your MySQL credentials.
-
-### 3) Run the app
-
-```powershell
-python app.py
 ```
-
-Or use the Windows helper script:
-
-```powershell
-.\run_project.ps1 -InitDb -SeedDb
-```
-
-## 🗄️ Database
-
-The project uses MySQL and includes SQL scripts for schema, seeds, triggers, views, and procedures inside the `db/` folder.
-
-## 👥 User Roles
-
-- **Disputant:** creates disputes, submits arguments, and can appeal
-- **Spectator:** comments, votes, and reports public disputes
-- **Admin:** moderates disputes, reviews reports, and handles appeals
-
-## 📚 Documentation
-
-- [Setup Guide](SETUP_GUIDE.md)
-- [Database Explanation](DATABASE_EXPLANATION.md)
-- [Moderation System Design](docs/MODERATION_SYSTEM_DESIGN.md)
-
-## 📌 Highlights
-
-- Public disputes support community interaction
-- Private disputes are invite-only and more controlled
-- Appeals can trigger AI re-analysis
-- Reports can escalate disputes automatically
-- Stats and leaderboard pages show platform activity
-
-## 🤝 Contributing
-
-If you want to improve VerdictBox, you can add better UI screenshots, a short demo video, or new moderation features.
-
-## 📄 License
-
-Add your preferred license here if you plan to publish the repository.
