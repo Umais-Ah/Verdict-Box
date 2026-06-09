@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h2 class="mb-0">Statistics</h2>
+    <div class="btn-group btn-group-sm" role="group" aria-label="Statistics range filter">
+        <a href="{{ url_for('disputes.statistics_page', period='7d') }}" class="btn {{ 'btn-primary' if period == '7d' else 'btn-outline-primary' }}">Last 7 Days</a>
+        <a href="{{ url_for('disputes.statistics_page', period='30d') }}" class="btn {{ 'btn-primary' if period == '30d' else 'btn-outline-primary' }}">Last 30 Days</a>
+        <a href="{{ url_for('disputes.statistics_page', period='all') }}" class="btn {{ 'btn-primary' if period == 'all' else 'btn-outline-primary' }}">Lifetime</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-3"><div class="card stat-card-primary"><div class="card-body"><div class="small text-uppercase text-muted">Total Disputes</div><div class="display-6 stat-counter" data-target="{{ total_disputes }}">0</div></div></div></div>
+    <div class="col-md-3"><div class="card stat-card-accent"><div class="card-body"><div class="small text-uppercase text-muted">Verdicts Given</div><div class="display-6 stat-counter" data-target="{{ total_verdicts }}">0</div></div></div></div>
+    <div class="col-md-3"><div class="card stat-card-win"><div class="card-body"><div class="small text-uppercase text-muted">Avg Confidence <i class="bi bi-info-circle ms-1" data-bs-toggle="tooltip" data-bs-title="Confidence is how sure the AI is about the selected winner based on argument quality and signals."></i></div><div class="display-6 stat-counter" data-target="{{ avg_confidence_pct | int }}">0</div><div class="small text-muted">%</div></div></div></div>
+    <div class="col-md-3"><div class="card stat-card-danger"><div class="card-body"><div class="small text-uppercase text-muted">Avg Toxicity</div><div class="display-6 stat-counter" data-target="{{ avg_toxicity_pct | int }}">0</div><div class="small text-muted mb-2">%</div><div class="toxicity-meter" aria-label="Average toxicity"><div class="toxicity-meter-fill" data-pct="{{ avg_toxicity_pct }}"></div></div></div></div></div>
+</div>
+
+<div class="card mb-3 agreement-hero" id="agreementHero" data-target="{{ agreement_pct | int }}">
+    <div class="card-body text-center">
+        <h5 class="mb-1">AI vs Community Agreement</h5>
+        {% if agreement_has_votes %}
+        <div class="display-5 agreement-value" data-target="{{ agreement_pct | int }}">0</div>
+        <div class="small text-muted mb-2">% agreed ({{ agreement_total }} decided cases)</div>
+        <div class="progress vote-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ agreement_pct | int }}">
+            <div class="progress-bar vote-bar-fill vote-a" data-pct="{{ agreement_pct }}"></div>
+            <div class="progress-bar vote-bar-fill vote-b" data-pct="{{ disagreement_pct }}"></div>
+        </div>
+        <div class="d-flex justify-content-between small mt-1 text-muted">
+            <span>Agreed</span>
+            <span>Disagreed: {{ disagreement_pct }}%</span>
+        </div>
+        {% else %}
+        <div class="display-6 agreement-value">--</div>
+        <div class="small text-muted mb-2">Waiting for community votes...</div>
+        <div class="progress vote-progress vote-progress-empty" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="progress-bar vote-bar-fill vote-a" data-pct="50"></div>
+            <div class="progress-bar vote-bar-fill vote-b" data-pct="50"></div>
+        </div>
+        <div class="d-flex justify-content-between small mt-1 text-muted">
+            <span>AI</span>
+            <span>Community</span>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5>Disputes Over Time</h5>
+                <div class="stats-line-wrap">
+                    <canvas id="activityLineChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5>Fallacy Frequency</h5>
+                <div class="stats-fallacy-wrap">
+                    <canvas id="fallacyBarChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script id="statisticsData" type="application/json">{{ {
+    'period': period,
+    'activity_labels': activity_labels,
+    'activity_counts': activity_counts,
+    'fallacy_labels': fallacy_labels,
+    'fallacy_full_labels': fallacy_full_labels,
+    'fallacy_counts': fallacy_counts,
+    'agreement_pct': agreement_pct,
+    'disagreement_pct': disagreement_pct
+} | tojson }}</script>
+{% endblock %}

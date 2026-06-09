@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="mb-3">Create Dispute</h3>
+                <div class="tip-box mb-3">
+                    <strong>Tip:</strong> Strong arguments use facts, not emotions.
+                </div>
+                <form id="createDisputeForm">
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input class="form-control" name="title" maxlength="200" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" id="descriptionField" name="description" rows="4" maxlength="2000"></textarea>
+                        <div class="text-muted small"><span id="descriptionCount">0</span>/2000 characters</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Invite Opponent (username)</label>
+                        <input class="form-control" name="opponent_username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Dispute Type</label>
+                        <select class="form-control" name="moderation_mode" required>
+                            <option value="">Select dispute type...</option>
+                            <option value="public">Public Dispute (Community voting, comments, reports)</option>
+                            <option value="private">Private Dispute (Invite-only, no public voting)</option>
+                        </select>
+                        <div class="text-muted small mt-2">
+                            <strong>Public:</strong> Open to spectators, they can vote and comment.<br>
+                            <strong>Private:</strong> Only you and opponent, focused discussion, no public voting.
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" type="submit">Create</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

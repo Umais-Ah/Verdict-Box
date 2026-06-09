@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% block content %}
+<svg class="badge-symbol-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+    <defs>
+        <symbol id="badge-icon-first-step" viewBox="0 0 64 64"><path d="M24 18c6 0 10 4 10 10s-4 10-10 10-10-4-10-10 4-10 10-10zm16 12c6 0 10 4 10 10s-4 10-10 10-10-4-10-10 4-10 10-10z" fill="currentColor"/><circle cx="22" cy="26" r="2" fill="#fff"/><circle cx="38" cy="38" r="2" fill="#fff"/></symbol>
+        <symbol id="badge-icon-first-argument" viewBox="0 0 64 64"><path d="M9 14h30a5 5 0 0 1 5 5v17a5 5 0 0 1-5 5H25l-10 8v-8H9a5 5 0 0 1-5-5V19a5 5 0 0 1 5-5z" fill="currentColor"/><path d="M33 22h22a5 5 0 0 1 5 5v14a5 5 0 0 1-5 5h-5v6l-8-6h-9a5 5 0 0 1-5-5V27a5 5 0 0 1 5-5z" fill="currentColor" opacity="0.75"/></symbol>
+        <symbol id="badge-icon-first-clash" viewBox="0 0 64 64"><path d="M15 10l9 3-5 15 10 10-5 5-10-10-15 5-3-9 13-7 6-12zM49 10l-9 3 5 15-10 10 5 5 10-10 15 5 3-9-13-7-6-12z" fill="currentColor"/></symbol>
+        <symbol id="badge-icon-first-victory" viewBox="0 0 64 64"><path d="M10 12h10c0 9 4 14 12 18 8-4 12-9 12-18h10c0 12-5 20-14 25v8h8v9H16v-9h8v-8C15 32 10 24 10 12z" fill="currentColor"/></symbol>
+        <symbol id="badge-icon-first-loss" viewBox="0 0 64 64"><path d="M32 6l22 10v16c0 12-7 22-22 26C17 54 10 44 10 32V16L32 6zm0 10l-10 5v11c0 7 3 13 10 17 7-4 10-10 10-17V21l-10-5z" fill="currentColor"/><path d="M20 44l7-7 6 6 11-11 4 4-15 15-6-6-3 3z" fill="#fff"/></symbol>
+        <symbol id="badge-icon-logic-master" viewBox="0 0 64 64"><rect x="12" y="12" width="40" height="40" rx="5" fill="none" stroke="currentColor" stroke-width="5"/><path d="M12 28h40M12 40h40M28 12v40M40 12v40" stroke="currentColor" stroke-width="4"/></symbol>
+        <symbol id="badge-icon-sharp-mind" viewBox="0 0 64 64"><path d="M32 8l10 7 11 1 5 10-3 11-7 8-8 11-11 1-10-7-11-1-5-10 3-11 7-8 8-11z" fill="currentColor" opacity="0.35"/><path d="M20 34c0-8 5-14 12-14s12 6 12 14l-3 2-2 6H25l-2-6-3-2z" fill="currentColor"/></symbol>
+        <symbol id="badge-icon-clean-thinker" viewBox="0 0 64 64"><path d="M32 8c10 14 16 22 16 30a16 16 0 1 1-32 0c0-8 6-16 16-30z" fill="currentColor"/><ellipse cx="26" cy="35" rx="5" ry="3" fill="#fff" opacity="0.75"/></symbol>
+        <symbol id="badge-icon-evidence-builder" viewBox="0 0 64 64"><rect x="12" y="42" width="40" height="10" rx="2" fill="currentColor"/><rect x="16" y="30" width="32" height="10" rx="2" fill="currentColor" opacity="0.85"/><rect x="20" y="18" width="24" height="10" rx="2" fill="currentColor" opacity="0.7"/></symbol>
+        <symbol id="badge-icon-ai-challenger" viewBox="0 0 64 64"><path d="M8 33c6-4 12-4 18 0l6 4 6-4c6-4 12-4 18 0" stroke="currentColor" stroke-width="5" fill="none" stroke-linecap="round"/><rect x="6" y="26" width="16" height="10" rx="3" fill="currentColor"/><path d="M42 24h14v14H42z" fill="none" stroke="currentColor" stroke-width="4"/><path d="M46 28h6M46 32h6" stroke="currentColor" stroke-width="3"/></symbol>
+        <symbol id="badge-icon-unstoppable" viewBox="0 0 64 64"><path d="M36 8c2 10-3 13-6 18 6-2 11-6 13-11 7 9 9 20 4 28a18 18 0 0 1-32-17c2-4 5-7 9-10-1 6 0 10 4 13 2-6 3-14 8-21z" fill="currentColor"/></symbol>
+        <symbol id="badge-icon-consistent-thinker" viewBox="0 0 64 64"><path d="M8 36c5 0 5-14 10-14s5 20 10 20 5-24 10-24 5 18 10 18 5-10 8-10" stroke="currentColor" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+        <symbol id="badge-icon-quick-responder" viewBox="0 0 64 64"><path d="M34 8L18 35h11l-4 21 21-30H35z" fill="currentColor"/><circle cx="48" cy="44" r="10" fill="none" stroke="currentColor" stroke-width="4"/></symbol>
+        <symbol id="badge-icon-debate-addict" viewBox="0 0 64 64"><path d="M19 15h9v20h-9l4-10-4-10zm17 0h9v20h-9l4-10-4-10z" fill="currentColor"/><path d="M32 52c-8 0-14-6-14-13 0-7 6-13 14-13s14 6 14 13c0 7-6 13-14 13z" fill="none" stroke="currentColor" stroke-width="5"/></symbol>
+        <symbol id="badge-icon-voice-of-the-people" viewBox="0 0 64 64"><path d="M8 30l28-14v32L8 34z" fill="currentColor"/><path d="M42 22c6 2 10 7 10 12s-4 10-10 12" stroke="currentColor" stroke-width="5" fill="none"/><path d="M48 15c8 4 13 11 13 19s-5 15-13 19" stroke="currentColor" stroke-width="4" fill="none" opacity="0.7"/></symbol>
+        <symbol id="badge-icon-influencer" viewBox="0 0 64 64"><path d="M32 9l6 12 13 2-9 9 2 13-12-6-12 6 2-13-9-9 13-2z" fill="currentColor"/><circle cx="32" cy="32" r="22" fill="none" stroke="currentColor" stroke-width="4" opacity="0.65"/></symbol>
+        <symbol id="badge-icon-fair-judge" viewBox="0 0 64 64"><path d="M32 10v38M20 20h24M12 25l8 13H4l8-13zm40 0l8 13H44l8-13zM22 54h20" stroke="currentColor" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+        <symbol id="badge-icon-clutch-player" viewBox="0 0 64 64"><circle cx="32" cy="32" r="20" fill="none" stroke="currentColor" stroke-width="5"/><path d="M32 18v14l10 6" stroke="currentColor" stroke-width="5" fill="none" stroke-linecap="round"/></symbol>
+        <symbol id="badge-icon-controversial-case" viewBox="0 0 64 64"><path d="M8 12h48v30H38l-12 10v-10H8z" fill="none" stroke="currentColor" stroke-width="5"/><path d="M35 17L24 34h8l-3 13 11-18h-8z" fill="currentColor"/></symbol>
+        <symbol id="badge-icon-edge-case-analyzer" viewBox="0 0 64 64"><rect x="10" y="10" width="12" height="12" fill="currentColor"/><path d="M12 46h10v6H6V36h6zm40 0h6V36h-6zM42 6h16v16h-6V12H42z" fill="currentColor"/><circle cx="40" cy="38" r="12" fill="none" stroke="currentColor" stroke-width="5"/><path d="M49 47l8 8" stroke="currentColor" stroke-width="5" stroke-linecap="round"/></symbol>
+    </defs>
+</svg>
+
+<div class="row g-3 mb-4 align-items-stretch profile-top-grid">
+    <div class="col-lg-5">
+        <div class="card h-100 profile-identity-card">
+            <div class="card-body">
+                <div class="profile-card-label mb-2">User Identity</div>
+                <div class="profile-identity-stack">
+                    <div class="profile-avatar profile-avatar-lg">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h3 class="mb-1">@{{ profile_user.username }}</h3>
+                        <div class="text-muted mb-1">Profile power status and reputation growth</div>
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                            <span class="profile-chip">{{ profile_user.role }}</span>
+                            <span class="profile-chip profile-chip-alt">{{ profile_wins }} wins</span>
+                            <span class="profile-chip profile-chip-alt">{{ profile_losses }} losses</span>
+                            <span class="profile-chip">Elite Profile</span>
+                            <span class="profile-chip profile-chip-alt">{{ profile_badges | length }} badges unlocked</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="profile-reputation-wrap mt-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="profile-card-label mb-0">Reputation Bar</span>
+                        <span class="text-muted small">{{ profile_reputation }} pts</span>
+                    </div>
+                    <div class="progress profile-reputation-bar">
+                        <div class="progress-bar vote-bar-fill" role="progressbar" style="width: {{ profile_level_progress_pct }}%;"></div>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted small mt-2">
+                        <span>Level {{ profile_level }}</span>
+                        <span>{{ profile_points_to_next }} to next level</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card h-100 profile-performance-card">
+            <div class="card-body">
+                <div class="profile-card-label mb-3">Performance</div>
+                <div class="row g-3 h-100">
+                    <div class="col-md-4">
+                        <div class="profile-stat profile-stat-win h-100">
+                            <div class="small text-uppercase text-muted mb-1">Wins</div>
+                            <div class="profile-stat-number text-success">{{ profile_wins }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="profile-stat profile-stat-loss h-100">
+                            <div class="small text-uppercase text-muted mb-1">Losses</div>
+                            <div class="profile-stat-number text-muted">{{ profile_losses }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="profile-stat profile-stat-ratio h-100">
+                            <div class="small text-uppercase text-muted mb-1">Win Ratio</div>
+                            <div class="profile-stat-number text-info">{{ profile_win_rate }}%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="card mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h5 class="mb-1">Recent Badges</h5>
+                <div class="text-muted small">Showing the latest 5 badges</div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge text-bg-dark">{{ profile_badges | length }} earned</span>
+            </div>
+        </div>
+        <div class="badge-grid profile-badge-grid">
+            {% for badge in profile_badge_cards[:5] %}
+                <div class="achievement-badge {{ badge.shape }} badge-theme-{{ badge.theme }} earned" title="{{ badge.description }}">
+                    <div class="achievement-badge-core">
+                        <svg class="badge-svg-icon" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+                            <use href="#badge-icon-{{ badge.slug }}"></use>
+                        </svg>
+                    </div>
+                    <span class="badge-name">{{ badge.name }}</span>
+                </div>
+            {% else %}
+                <div class="text-muted">No badges yet.</div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h5 class="mb-1">Recent Disputes</h5>
+                <div class="text-muted small">Public case highlights with clear outcomes</div>
+            </div>
+            <span class="badge text-bg-secondary">{{ profile_disputes | length }} total</span>
+        </div>
+        <ul class="list-group profile-dispute-list dashboard-list">
+            {% for dispute in profile_dispute_cards[:15] %}
+                <li class="list-group-item profile-dispute-item d-flex justify-content-between align-items-center gap-3">
+                    <div class="flex-grow-1">
+                        <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                            <span class="result-pill {{ dispute.result_class }}">{{ dispute.result_label }}</span>
+                            <strong>{{ dispute.title }}</strong>
+                            <span class="card-mode-icon ms-1" title="{{ 'Private' if dispute.moderation_mode == 'private' else 'Public' }}">
+                                {% if dispute.moderation_mode == 'private' %}
+                                <i class="bi bi-lock-fill text-secondary"></i>
+                                {% else %}
+                                <i class="bi bi-globe2 text-info"></i>
+                                {% endif %}
+                            </span>
+                            {% if dispute.moderation_mode == 'private' %}
+                            <span class="badge text-bg-secondary" style="font-size: 0.75rem;"><i class="bi bi-lock"></i> Private</span>
+                            {% endif %}
+                        </div>
+                        <div class="small text-muted">
+                            Against {{ dispute.opponent_name }}
+                            {% if dispute.show_vote_copy %}
+                                | {{ dispute.vote_copy }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <a class="btn btn-sm btn-outline-primary" href="{{ url_for('disputes.get_dispute', dispute_id=dispute.id) }}">
+                        {% if dispute.status == 'resolved' %}
+                            View Verdict
+                        {% else %}
+                            Read Argument
+                        {% endif %}
+                    </a>
+                </li>
+            {% else %}
+                <li class="list-group-item text-muted">No disputes found.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+{% endblock %}

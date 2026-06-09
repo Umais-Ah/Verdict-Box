@@ -1,0 +1,389 @@
+{% extends 'base.html' %}
+{% block content %}
+{% set winner_name = ai_result.winner.username if ai_result.winner else 'Unknown' %}
+{% set user_a_name = submissions[0].user.username if submissions|length > 0 else '' %}
+{% set user_b_name = submissions[1].user.username if submissions|length > 1 else '' %}
+{% set confidence_pct = (ai_result.confidence_score * 100) | round(1) %}
+{% set total_votes = vote_counts.values() | sum %}
+{% set side_a_submission = submissions[0] if submissions|length > 0 else none %}
+{% set side_b_submission = submissions[1] if submissions|length > 1 else none %}
+{% set side_a_votes = vote_counts.get(side_a_submission.user_id, 0) if side_a_submission else 0 %}
+{% set side_b_votes = vote_counts.get(side_b_submission.user_id, 0) if side_b_submission else 0 %}
+{% set side_a_pct = ((side_a_votes / total_votes) * 100) if total_votes > 0 else 0 %}
+{% set side_b_pct = ((side_b_votes / total_votes) * 100) if total_votes > 0 else 0 %}
+{% set ai_alignment_pct = ((side_a_votes / total_votes) * 100) if total_votes > 0 and side_a_submission and ai_result.winner_user_id == side_a_submission.user_id else ((side_b_votes / total_votes) * 100) if total_votes > 0 and side_b_submission and ai_result.winner_user_id == side_b_submission.user_id else 0 %}
+{% set case_category = 'Public Debate' if dispute.is_public else 'Private Debate' %}
+{% set title_lower = dispute.title | lower %}
+{% if 'work' in title_lower or 'office' in title_lower or 'remote' in title_lower %}
+    {% set case_category = 'Work Culture' %}
+{% elif 'social media' in title_lower or 'internet' in title_lower or 'online' in title_lower %}
+    {% set case_category = 'Digital Society' %}
+{% elif 'education' in title_lower or 'school' in title_lower or 'teacher' in title_lower %}
+    {% set case_category = 'Education' %}
+{% endif %}
+
+<section class="card mb-3 case-header-card">
+    <div class="card-body">
+        <p class="case-id-label mb-1">DISPUTE CASE #{{ dispute.id }}</p>
+        <h1 class="case-main-title mb-2">{{ dispute.title }}</h1>
+        <div class="d-flex flex-wrap gap-2">
+            {% if dispute.moderation_mode == 'private' %}
+            <span class="badge text-bg-light border">Category: Private Dispute</span>
+            {% else %}
+            <span class="badge text-bg-light border">Category: {{ case_category }}</span>
+            {% endif %}
+            <span class="badge text-bg-info">Date: {{ dispute.created_at.strftime('%b %d, %Y') if dispute.created_at else 'N/A' }}</span>
+            {% if dispute.moderation_mode == 'private' %}
+            <span class="badge text-bg-secondary"><i class="bi bi-lock"></i> Private Dispute (Invite-only)</span>
+            {% else %}
+            <span class="badge text-bg-light"><i class="bi bi-globe"></i> Public Dispute (Community voting)</span>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+{% if approved_appeal %}
+<div class="alert alert-success mb-3">
+    Appeal approved. The dispute has been reopened for review.
+    <div class="mt-2"><span class="badge text-bg-warning text-dark">Result changed via Moderator Appeal.</span></div>
+    {% if winner_changed_via_appeal and previous_winner_name %}
+    <div class="small mt-1"><s>Previous Winner: {{ previous_winner_name }}</s></div>
+    {% endif %}
+    {% if approved_appeal.admin_response %}
+    <div class="small mt-1">Admin response: {{ approved_appeal.admin_response }}</div>
+    {% endif %}
+</div>
+{% elif latest_appeal and latest_appeal.status == 'rejected' %}
+<div class="alert alert-secondary mb-3">
+    Appeal rejected. The original verdict still stands.
+    {% if latest_appeal.admin_response %}
+    <div class="small mt-1">Admin response: {{ latest_appeal.admin_response }}</div>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if dispute.status in ['reported', 'flagged'] %}
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            {% if dispute.status == 'reported' %}
+            <span class="badge text-bg-warning text-dark">Reported (Under Observation)</span>
+            {% else %}
+            <span class="badge text-bg-warning text-dark">Under Review</span>
+            <span class="badge text-bg-danger">Flagged</span>
+            {% endif %}
+            <span class="badge text-bg-secondary">{{ report_summary.count }} reports</span>
+            {% if report_summary.count >= report_threshold %}
+            <span class="badge text-bg-danger">Escalated to admin review</span>
+            {% endif %}
+        </div>
+        {% if report_summary.count %}
+        <div class="report-summary-box mt-3">
+            <div class="small text-uppercase text-muted mb-2">Report Reasons</div>
+            <div class="d-flex flex-wrap gap-1">
+                {% for reason in report_summary.reasons[:6] %}
+                <span class="badge text-bg-light border">{{ report_reason_labels.get(reason, reason|replace('_', ' ')|title) }}</span>
+                {% endfor %}
+            </div>
+            <div class="small text-muted mt-2">
+                {% for report in report_summary.rows[:3] %}
+                <div>@{{ report.reporter.username if report.reporter else 'Unknown' }} reported: {{ report.details or report_reason_labels.get(report.reason, report.reason|replace('_', ' ')|title) }}</div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<section class="card mb-3 border-success verdict-hero winner-strip">
+    <div class="card-body">
+        <div class="row g-3 align-items-center">
+            <div class="col-lg-7">
+                <p class="text-uppercase small text-muted mb-1">Final Decision</p>
+                <h2 class="text-success winner-announcement mb-2"><i class="bi bi-trophy-fill me-2"></i>Winner: {{ winner_name }}</h2>
+                <div class="ai-reasoning-box mb-2">
+                    <div class="small fw-semibold mb-1"><i class="bi bi-cpu me-1"></i>AI LOGIC &amp; REASONING</div>
+                    <p
+                        class="mb-0 verdict-text"
+                        id="verdictReasoningText"
+                        data-text="{{ ai_result.reasoning }}"
+                        data-user-a="{{ user_a_name }}"
+                        data-user-b="{{ user_b_name }}"
+                        data-winner-name="{{ winner_name }}"
+                        data-has-appeal="{{ 'true' if approved_appeal else 'false' }}"
+                    ></p>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="vb-speedometer" data-confidence="{{ confidence_pct }}">
+                    <div class="vb-speedometer-arc"></div>
+                    <div class="vb-speedometer-cover"></div>
+                    <div class="vb-speedometer-needle"></div>
+                    <div class="vb-speedometer-value">{{ confidence_pct }}%</div>
+                </div>
+                <p class="text-center text-muted small mb-0">Confidence score</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="row g-3 mb-2">
+    {% for s in submissions %}
+    {% set is_a = loop.index0 == 0 %}
+    {% if is_a %}
+        {% set toxicity_val = ai_result.toxicity_score_a | float %}
+        {% set sarcasm_val = ai_result.sarcasm_score_a | float %}
+        {% set sentiment_val = ai_result.sentiment_a %}
+        {% set fallacy_items = fallacies_a_display %}
+    {% else %}
+        {% set toxicity_val = ai_result.toxicity_score_b | float %}
+        {% set sarcasm_val = ai_result.sarcasm_score_b | float %}
+        {% set sentiment_val = ai_result.sentiment_b %}
+        {% set fallacy_items = fallacies_b_display %}
+    {% endif %}
+    {% set has_fallacies = (fallacy_items | length) > 0 %}
+
+    <div class="col-lg-6">
+        <div class="card h-100 battle-card {{ 'battle-a' if is_a else 'battle-b' }} {{ 'winner-card' if s.user_id == ai_result.winner_user_id else '' }} {{ 'comparison-risk' if has_fallacies else 'comparison-clean' }}">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="mb-0">{{ s.user.username }}</h5>
+                    <span class="badge text-bg-light border">{{ 'Side A' if is_a else 'Side B' }}</span>
+                </div>
+
+                <p class="mb-3">{{ s.argument_text }}</p>
+                <blockquote class="argument-summary mt-2 mb-3">
+                    In short: {{ summaries_by_user.get(s.user_id, 'No summary available.') }}
+                </blockquote>
+
+                <div class="metric-gauge-grid mb-3">
+                    <div class="metric-gauge-box">
+                        <div class="small text-muted mb-1">Toxicity</div>
+                        <div class="metric-vertical-track">
+                            <div class="metric-vertical-fill metric-toxic" style="height: {{ (toxicity_val * 100) | int }}%;"></div>
+                        </div>
+                        <div class="small mt-1">{{ (toxicity_val * 100) | round(1) }}%</div>
+                        <div class="metric-state {{ 'metric-state-low' if toxicity_val < 0.33 else 'metric-state-med' if toxicity_val < 0.66 else 'metric-state-high' }}">
+                            {{ 'Low' if toxicity_val < 0.33 else 'Med' if toxicity_val < 0.66 else 'High' }} Toxicity
+                        </div>
+                    </div>
+                    <div class="metric-gauge-box">
+                        <div class="small text-muted mb-1">Sarcasm</div>
+                        <div class="metric-vertical-track">
+                            <div class="metric-vertical-fill metric-sarcasm" style="height: {{ (sarcasm_val * 100) | int }}%;"></div>
+                        </div>
+                        <div class="small mt-1">{{ (sarcasm_val * 100) | round(1) }}%</div>
+                        <div class="metric-state {{ 'metric-state-low' if sarcasm_val < 0.33 else 'metric-state-med' if sarcasm_val < 0.66 else 'metric-state-high' }}">
+                            {{ 'Low' if sarcasm_val < 0.33 else 'Med' if sarcasm_val < 0.66 else 'High' }} Sarcasm
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <span class="badge text-bg-info">Sentiment: {{ sentiment_val }}</span>
+                </div>
+
+                <div>
+                    <div class="fw-semibold mb-1">Detected fallacies</div>
+                    {% if fallacy_items %}
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for item in fallacy_items %}
+                                <span class="badge rounded-pill text-bg-danger">Warning: {{ item }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <span class="text-muted">None detected</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</section>
+
+<div class="text-center my-2">
+    <span class="vs-badge vs-badge-xl">VS</span>
+</div>
+
+{% if dispute.moderation_mode == 'public' %}
+<div class="card mt-3">
+    <div class="card-body">
+        <h5>Community Jury</h5>
+        <div id="voteDistribution" class="community-jury-wrap" data-dispute-id="{{ dispute.id }}">
+            <div class="d-flex justify-content-between small mb-1 jury-label-row">
+                <span>Side A: {{ side_a_pct | round(1) }}%</span>
+                <span>Side B: {{ side_b_pct | round(1) }}%</span>
+            </div>
+
+            <div class="split-vote-bar" role="progressbar" aria-valuenow="{{ side_a_pct | int }}" aria-valuemin="0" aria-valuemax="100" aria-label="Community jury ratio bar">
+                <div class="split-vote-fill split-vote-a" style="width: {{ side_a_pct | round(1) }}%;"></div>
+                <div class="split-vote-fill split-vote-b" style="width: {{ side_b_pct | round(1) }}%;"></div>
+            </div>
+
+            <div class="d-flex justify-content-between small mt-2 text-muted jury-vote-count-row">
+                <span>{{ side_a_votes }} votes</span>
+                <span>{{ side_b_votes }} votes</span>
+            </div>
+
+            <div class="mt-3 ai-alignment-box">
+                <div class="fw-semibold">AI Alignment: {{ ai_alignment_pct | round(1) }}%</div>
+                <div class="small text-muted">The crowd mostly agrees with the AI's logic.</div>
+                <div class="tiny-note mt-1">Note: Public opinion does not influence the official AI Verdict.</div>
+            </div>
+        </div>
+
+        {% if current_user.is_authenticated and current_user.role == 'spectator' %}
+        <form id="voteForm" data-dispute-id="{{ dispute.id }}" class="mt-3">
+            {% if side_a_submission %}
+                <button class="btn btn-outline-primary me-2" type="submit" name="voted_for_user_id" value="{{ side_a_submission.user_id }}">Support Side A</button>
+            {% endif %}
+            {% if side_b_submission %}
+                <button class="btn btn-outline-primary me-2" type="submit" name="voted_for_user_id" value="{{ side_b_submission.user_id }}">Support Side B</button>
+            {% endif %}
+        </form>
+        {% elif current_user.is_authenticated %}
+        <div class="small text-muted mt-3">Voting is available for spectator accounts only.</div>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<div class="card mt-3 border-secondary">
+    <div class="card-body text-center">
+        <i class="bi bi-lock text-muted" style="font-size: 2rem;"></i>
+        <h5 class="mt-2">Private Dispute</h5>
+        <p class="text-muted mb-0">This is an invite-only debate. Voting is disabled for private disputes.</p>
+    </div>
+</div>
+{% endif %}
+
+<div class="card mt-3">
+    <div class="card-body">
+        <h5>Could You Have Won?</h5>
+        <button class="btn btn-sm mb-2 simulate-btn" type="button" data-bs-toggle="collapse" data-bs-target="#couldHaveWonPanel" aria-expanded="false" aria-controls="couldHaveWonPanel">
+            Run What-If Simulation
+        </button>
+        <div class="collapse" id="couldHaveWonPanel">
+            <div class="suggestion-box" id="typedSuggestion" data-text="{{ could_have_won_tip }}"></div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-3">
+    <div class="card-body">
+        <h5>Dispute History Timeline</h5>
+        <div class="timeline">
+            {% for event in timeline_events %}
+            <div class="timeline-item timeline-{{ event.kind }}" style="animation-delay: {{ loop.index0 * 90 }}ms;">
+                <div class="timeline-dot">
+                    {% if event.kind == 'created' %}
+                        <i class="bi bi-journal-text"></i>
+                    {% elif event.kind == 'submitted' %}
+                        <i class="bi bi-pencil-square"></i>
+                    {% elif event.kind == 'verdict' %}
+                        <i class="bi bi-robot"></i>
+                    {% elif event.kind == 'appeal' %}
+                        <i class="bi bi-arrow-repeat"></i>
+                    {% else %}
+                        <i class="bi bi-circle-fill"></i>
+                    {% endif %}
+                </div>
+                <div class="timeline-content">
+                    <div>{{ event.label }}</div>
+                    <div class="small text-muted">{{ event.when.strftime('%b %d, %Y %I:%M %p') if event.when else '' }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% if can_appeal %}
+<div class="card mt-3">
+    <div class="card-body">
+        <h5>Appeal</h5>
+        <form id="appealForm" data-dispute-id="{{ dispute.id }}">
+            <textarea class="form-control mb-2" name="reason_text" rows="3" placeholder="Explain why this verdict should be reviewed"></textarea>
+            <button class="btn btn-warning" type="submit">Submit Appeal</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+{% if can_report %}
+{% if dispute.moderation_mode == 'public' %}
+<div class="card mt-3 report-dispute-card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+            <div>
+                <h5 class="mb-1">Report Dispute</h5>
+                <div class="small text-muted">Reports are counted toward moderation when they reach the threshold.</div>
+            </div>
+            <span class="badge text-bg-warning text-dark">Threshold: {{ report_threshold }}</span>
+        </div>
+        <form id="reportDisputeForm" data-dispute-id="{{ dispute.id }}">
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <select class="form-select" name="reason" required>
+                        {% for key, label in report_reason_labels.items() %}
+                        <option value="{{ key }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-8">
+                    <input class="form-control" name="details" maxlength="500" placeholder="Optional details for the moderator...">
+                </div>
+            </div>
+            <div class="mt-2 d-flex justify-content-end">
+                <button class="btn btn-outline-danger" type="submit">Submit Report</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% else %}
+<div class="card mt-3 report-dispute-card border-secondary">
+    <div class="card-body text-center">
+        <i class="bi bi-shield-check text-muted" style="font-size: 1.5rem;"></i>
+        <h5 class="mt-2">Private Dispute - No Reporting</h5>
+        <p class="text-muted mb-0">Reports are disabled for private disputes. Contact an admin directly if there are moderation concerns.</p>
+    </div>
+</div>
+{% endif %}
+{% endif %}
+
+<div class="card mt-3">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="mb-0">{% if dispute.moderation_mode == 'private' %}Participant Discussion{% else %}Public Comments{% endif %}</h5>
+            <span class="badge text-bg-secondary" id="commentCountBadge">{{ comments|length if comments is defined else 0 }}</span>
+        </div>
+
+        {% if dispute.moderation_mode == 'private' %}
+        <div class="alert alert-info mb-3">
+            <i class="bi bi-info-circle"></i> Only participants in this private dispute can post here.
+        </div>
+        {% endif %}
+
+        <form id="commentForm" data-dispute-id="{{ dispute.id }}" class="mb-3">
+            <textarea class="form-control mb-2" id="commentText" name="body" rows="3" maxlength="1000" placeholder="{% if dispute.moderation_mode == 'private' %}Add to participant discussion...{% else %}Share your view on this verdict...{% endif %}"></textarea>
+            <button class="btn btn-outline-primary" type="submit">Post{% if dispute.moderation_mode == 'private' %} to Discussion{% endif %}</button>
+        </form>
+
+        <div id="commentList" class="comment-list">
+            {% if comments %}
+                {% for c in comments %}
+                    <div class="comment-item" data-comment-id="{{ c.id }}">
+                        <div class="comment-meta">
+                            <strong>@{{ c.author.username if c.author else 'Unknown' }}</strong>
+                            <span class="text-muted small">{{ c.created_at.strftime('%b %d, %Y %I:%M %p') if c.created_at else '' }}</span>
+                        </div>
+                        <div class="comment-body">{{ c.body }}</div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div id="commentEmptyState" class="text-muted">No comments yet. Be the first to react.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

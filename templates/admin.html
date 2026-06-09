@@ -1,0 +1,379 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2 class="mb-3">Admin Panel</h2>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-6">
+        <div class="card admin-counter danger-left admin-metric-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="text-muted small text-uppercase">Flagged Disputes</div>
+                        <div class="display-6 admin-metric-number">{{ flagged_disputes | length }}</div>
+                    </div>
+                    <div class="admin-metric-icon text-danger"><i class="bi bi-shield-fill"></i></div>
+                </div>
+                <div class="admin-metric-bg"><i class="bi bi-shield-fill"></i></div>
+                <div class="admin-metric-trend text-danger small">+2 since yesterday</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card admin-counter warning-left admin-metric-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="text-muted small text-uppercase">Pending Appeals</div>
+                        <div class="display-6 admin-metric-number">{{ pending_appeals | length }}</div>
+                    </div>
+                    <div class="admin-metric-icon text-info"><i class="bi bi-scale"></i></div>
+                </div>
+                <div class="admin-metric-bg"><i class="bi bi-scale"></i></div>
+                <div class="admin-metric-trend text-info small">+1 new today</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ul class="nav nav-tabs mb-3" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#flagged">Flagged Disputes</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#appeals">Pending Appeals</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#users">All Users</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#logs">Admin Logs</button></li>
+</ul>
+
+<div class="tab-content">
+    <div class="tab-pane fade show active" id="flagged">
+        <table class="table table-sm table-bordered admin-flagged-table">
+            <thead><tr><th>Dispute</th><th>Status</th><th>Reports</th><th>Action</th></tr></thead>
+            <tbody>
+                {% for d in flagged_disputes %}
+                <tr class="flagged-row">
+                    <td>
+                        <div class="fw-semibold">{{ d.title }}</div>
+                        <div class="small text-muted">{{ d.creator.username if d.creator else 'Unknown' }} vs {{ d.invited.username if d.invited else 'Unknown' }}</div>
+                        {% if d.moderation_mode == 'private' %}
+                        <div class="mt-1"><span class="badge text-bg-secondary"><i class="bi bi-lock"></i> Private Dispute</span></div>
+                        {% endif %}
+                        {% if d.flagged_by_system %}
+                        <div class="mt-1"><span class="badge text-bg-warning text-dark">System Flagged: {{ d.system_flag_reason }}</span></div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge text-bg-danger">{{ d.status|upper }}</span>
+                        {% if d.review_state %}
+                        <div class="small text-muted mt-1">{{ d.review_state|replace('_', ' ')|title }}</div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="small fw-semibold">{{ d.reports|length }} total reports</div>
+                        {% if d.reports %}
+                        <div class="d-flex flex-wrap gap-1 mt-1">
+                            {% for r in d.reports[:4] %}
+                                <span class="badge report-tag report-tag-{{ r.reason|lower }}">{{ r.reason|replace('_', ' ')|title }}</span>
+                            {% endfor %}
+                        </div>
+                        <div class="small text-muted mt-2 report-list" id="report-list-{{ d.id }}">
+                            {% for r in d.reports %}
+                                <div class="report-row{% if loop.index0 >= 3 %} report-row-hidden{% endif %}">
+                                    <span class="report-avatar" data-seed="{{ r.reporter.username if r.reporter else 'Unknown' }}">
+                                        {{ (r.reporter.username[0] if r.reporter and r.reporter.username else '?')|upper }}
+                                    </span>
+                                    <span class="report-text">
+                                        @{{ r.reporter.username if r.reporter else 'Unknown' }}: {{ r.details or (r.reason|replace('_', ' ')|title) }}
+                                    </span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        {% if d.reports|length > 3 %}
+                        <button class="btn btn-link btn-sm p-0 mt-1 report-toggle" type="button" data-target="report-list-{{ d.id }}">
+                            View all {{ d.reports|length }} reports
+                        </button>
+                        {% endif %}
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button
+                            class="btn btn-sm btn-primary moderation-modal-trigger"
+                            type="button"
+                            data-dispute-id="{{ d.id }}"
+                            data-title="{{ d.title }}"
+                            data-description="{{ d.description or 'No description provided.' }}"
+                            data-report-reasons="{% for r in d.reports %}{{ r.reason }}{% if not loop.last %}, {% endif %}{% endfor %}"
+                            data-creator-id="{{ d.creator.id if d.creator else '' }}"
+                            data-creator-name="{{ d.creator.username if d.creator else '' }}"
+                            data-invited-id="{{ d.invited.id if d.invited else '' }}"
+                            data-invited-name="{{ d.invited.username if d.invited else '' }}"
+                        >
+                            Action & Decide
+                        </button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="text-muted">No flagged disputes</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="tab-pane fade" id="appeals">
+        <table class="table table-sm table-bordered">
+            <thead><tr><th>Dispute</th><th>Reason</th><th>Decision</th></tr></thead>
+            <tbody>
+                {% for a in pending_appeals %}
+                <tr>
+                    <td>
+                        <div class="fw-semibold">#{{ a.dispute_id }}</div>
+                        <div class="small text-muted">{{ a.dispute.title if a.dispute else 'Unknown dispute' }}</div>
+                    </td>
+                    <td>{{ a.reason_text }}</td>
+                    <td>
+                        <button
+                            class="btn btn-sm btn-primary appeal-modal-trigger"
+                            type="button"
+                            data-appeal-id="{{ a.id }}"
+                            data-dispute-id="{{ a.dispute_id }}"
+                            data-dispute-title="{{ a.dispute.title if a.dispute else 'Unknown dispute' }}"
+                            data-reason="{{ a.reason_text }}"
+                            data-winner="{{ a.dispute.ai_result.winner.username if a.dispute and a.dispute.ai_result and a.dispute.ai_result.winner else 'Unknown' }}"
+                        >
+                            Review & Decide
+                        </button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="3" class="text-muted">No pending appeals</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="tab-pane fade" id="users">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="text-muted small">Search users</div>
+            <input class="form-control form-control-sm admin-user-search" id="adminUserSearch" placeholder="Search username">
+        </div>
+        <table class="table table-sm table-bordered" id="adminUsersTable">
+            <thead><tr><th>Username</th><th>Role</th><th>Active</th><th>Action</th></tr></thead>
+            <tbody>
+                {% for u in all_users %}
+                <tr>
+                    <td>
+                        <div class="admin-user-cell">
+                            <span class="admin-avatar" data-seed="{{ u.username }}">{{ (u.username[0] if u.username else '?')|upper }}</span>
+                            <div>
+                                <div class="admin-username">@{{ u.username }}</div>
+                                <div class="admin-user-meta">ID: {{ u.id }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="role-pill role-pill-{{ u.role }}">{{ u.role|title }}</span>
+                        {% if u.role == 'admin' %}
+                            <i class="bi bi-lock-fill text-warning ms-1" title="Protected"></i>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge status-pill {{ 'status-pill-active' if u.is_active else 'status-pill-inactive' }}">
+                            {{ 'Active' if u.is_active else 'Inactive' }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if u.role != 'admin' %}
+                        <form class="adminToggleUserForm d-inline" data-user-id="{{ u.id }}">
+                            <button class="btn btn-sm {{ 'btn-outline-danger' if u.is_active else 'btn-outline-success' }}" type="submit">
+                                {{ 'Deactivate' if u.is_active else 'Activate' }}
+                            </button>
+                        </form>
+                        {% else %}
+                        <span class="text-muted small">Protected</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="text-muted">No users</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="tab-pane fade" id="logs">
+        <table class="table table-sm table-bordered admin-logs-table">
+            <thead><tr><th></th><th>Admin ID</th><th>Action</th><th>Target ID</th><th>Reason</th><th>Created At</th></tr></thead>
+            <tbody>
+                {% for l in admin_logs %}
+                <tr class="admin-log-row">
+                    <td class="log-timeline-cell">
+                        <span class="log-dot"></span>
+                    </td>
+                    <td>
+                        <div class="admin-log-actor">
+                            {% if l.admin_user_id %}
+                                <i class="bi bi-key-fill text-info"></i>
+                                <a class="admin-log-link" href="#users" data-user-id="{{ l.admin_user_id }}">{{ l.admin_user_id }}</a>
+                            {% else %}
+                                <i class="bi bi-cpu-fill text-muted"></i>
+                                <span class="text-muted">System</span>
+                            {% endif %}
+                        </div>
+                        <div class="small text-muted">
+                            {% if l.admin_user %}
+                                <a class="admin-log-link" href="#users" data-user-id="{{ l.admin_user.id }}">@{{ l.admin_user.username }}</a>
+                            {% else %}
+                                System
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>{{ l.action_type }}</td>
+                    <td>
+                        {% if l.target_user_id %}
+                            <a class="admin-log-link" href="#users" data-user-id="{{ l.target_user_id }}">User #{{ l.target_user_id }}</a>
+                        {% elif l.dispute_id %}
+                            <a class="admin-log-link" href="/dispute/{{ l.dispute_id }}">Dispute #{{ l.dispute_id }}</a>
+                        {% else %}
+                            <span class="text-muted">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-wrap">
+                        {% if 'appeal' in l.action_type %}
+                        <span class="badge log-badge log-badge-justice">Justice</span>
+                        {% elif 'user' in l.action_type or 'restricted' in l.action_type %}
+                        <span class="badge log-badge log-badge-security">Security</span>
+                        {% else %}
+                        <span class="badge log-badge log-badge-moderation">Moderation</span>
+                        {% endif %}
+                        {% if l.reason and 'Admin response:' in l.reason %}
+                            {% set parts = l.reason.split('Admin response:') %}
+                            <div>{{ parts[0] }}</div>
+                            <blockquote class="log-quote">{{ parts[1] }}</blockquote>
+                        {% elif l.reason and 'active=' in l.reason %}
+                            <pre class="log-code">{{ l.reason }}</pre>
+                        {% else %}
+                            <div>{{ l.reason }}</div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="admin-log-time" data-created-at="{{ l.created_at.isoformat() if l.created_at else '' }}">{{ l.created_at }}</span>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="text-muted">No logs</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="appeal-modal" id="appealDecisionModal" aria-hidden="true">
+    <div class="appeal-modal-backdrop"></div>
+    <div class="appeal-modal-card">
+        <div class="appeal-modal-header">
+            <div>
+                <div class="small text-muted">Dispute</div>
+                <div class="appeal-modal-title" id="appealModalTitle">#--</div>
+            </div>
+            <button class="btn btn-sm btn-outline-secondary appeal-modal-close" type="button">Close</button>
+        </div>
+
+        <div class="appeal-modal-body">
+            <div class="appeal-modal-context">
+                <div class="appeal-context-row">
+                    <span class="text-muted small">Decision</span>
+                    <div class="appeal-toggle" role="group">
+                        <button class="appeal-toggle-btn" type="button" data-value="approved">Approve</button>
+                        <button class="appeal-toggle-btn" type="button" data-value="rejected">Reject</button>
+                    </div>
+                </div>
+                <div class="appeal-context-row">
+                    <span class="text-muted small">User Appeal</span>
+                    <div class="appeal-context-box" id="appealModalReason">-</div>
+                </div>
+                <div class="appeal-context-row">
+                    <span class="text-muted small">Original AI Verdict</span>
+                    <div class="appeal-context-box">Winner: <span id="appealModalWinner">Unknown</span></div>
+                </div>
+            </div>
+            <div class="appeal-modal-action">
+                <div class="form-floating appeal-response-field">
+                    <textarea class="form-control appeal-response-text" id="appealModalResponse" maxlength="500" placeholder="Enter Official Reasoning..."></textarea>
+                    <label>Enter Official Reasoning...</label>
+                </div>
+                <div class="appeal-response-footer">
+                    <div class="appeal-response-tools">
+                        <i class="bi bi-type-bold"></i>
+                        <i class="bi bi-type-italic"></i>
+                        <i class="bi bi-link-45deg"></i>
+                    </div>
+                    <div class="appeal-response-counter" data-max="500">0/500</div>
+                </div>
+                <div class="appeal-modal-actions">
+                    <button class="btn appeal-save-btn" type="button" id="appealModalSave">Save Decision</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="moderation-modal" id="moderationDecisionModal" aria-hidden="true">
+    <div class="moderation-modal-backdrop"></div>
+    <div class="moderation-modal-card">
+        <div class="moderation-modal-header">
+            <div>
+                <div class="small text-muted">Dispute</div>
+                <div class="moderation-modal-title" id="moderationModalTitle">#--</div>
+            </div>
+            <button class="btn btn-sm btn-outline-secondary moderation-modal-close" type="button">Close</button>
+        </div>
+
+        <div class="moderation-modal-body">
+            <div class="moderation-modal-context">
+                <div class="moderation-context-row">
+                    <span class="text-muted small">Report Reasons</span>
+                    <div class="moderation-context-tags" id="moderationModalReasons"></div>
+                </div>
+                <div class="moderation-context-row">
+                    <span class="text-muted small">Dispute Text</span>
+                    <div class="moderation-context-box" id="moderationModalDescription">-</div>
+                </div>
+            </div>
+            <div class="moderation-modal-action">
+                <div class="moderation-toggle" role="group">
+                    <button class="moderation-toggle-btn" type="button" data-value="clear">Approve</button>
+                    <button class="moderation-toggle-btn" type="button" data-value="hide">Reject</button>
+                </div>
+                <div class="moderation-secondary-actions">
+                    <button class="btn btn-sm btn-outline-info moderation-secondary-btn" type="button" data-value="investigate">Investigate</button>
+                    <button class="btn btn-sm btn-outline-warning moderation-secondary-btn" type="button" data-value="restrict">Restrict</button>
+                </div>
+                <div class="moderation-target" id="moderationTargetWrap">
+                    <label class="text-muted small" for="moderationTargetSelect">Restrict Target</label>
+                    <select class="form-select form-select-sm" id="moderationTargetSelect">
+                        <option value="">Restrict creator by default</option>
+                    </select>
+                </div>
+                <div class="admin-reason-chips">
+                    <button type="button" class="chip" data-fill="Spam">Spam</button>
+                    <button type="button" class="chip" data-fill="Harassment">Harassment</button>
+                    <button type="button" class="chip" data-fill="Misinformation">Misinformation</button>
+                    <button type="button" class="chip" data-fill="Policy violation">Policy Violation</button>
+                </div>
+                <div class="form-floating moderation-notes-field">
+                    <textarea class="form-control moderation-notes-text" id="moderationNotes" maxlength="500" placeholder="Enter official moderation notes..."></textarea>
+                    <label>Enter official moderation notes...</label>
+                </div>
+                <div class="moderation-notes-footer">
+                    <div class="moderation-notes-tools">
+                        <i class="bi bi-type-bold"></i>
+                        <i class="bi bi-type-italic"></i>
+                        <i class="bi bi-link-45deg"></i>
+                    </div>
+                    <div class="moderation-notes-counter" data-max="500">0/500</div>
+                </div>
+                <div class="moderation-modal-actions">
+                    <button class="btn moderation-save-btn" type="button" id="moderationModalSave">Save Decision</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

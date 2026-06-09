@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="p-4 p-md-5 rounded hero-section hero-premium mb-4 text-center">
+    <p class="hero-kicker mb-2">Digital Courtroom</p>
+    <h1 class="display-5 fw-bold mb-3">Where Arguments Meet <span class="hero-emphasis">Justice</span></h1>
+    <p class="lead hero-lead mb-4 mx-auto">A serious, modern platform where debates are analyzed, judged, and explained with transparency.</p>
+    <div class="d-flex flex-wrap gap-2 justify-content-center">
+        {% if current_user.is_authenticated and current_user.role == 'disputant' %}
+        <a href="{{ url_for('disputes.create_dispute_page') }}" class="btn btn-primary btn-lg hero-cta">Create Dispute</a>
+        <a href="{{ url_for('disputes.list_disputes') }}" class="btn btn-outline-primary btn-lg hero-cta-secondary">Browse Disputes</a>
+        {% elif current_user.is_authenticated and current_user.role == 'admin' %}
+        <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-primary btn-lg hero-cta">Open Admin Panel</a>
+        <a href="{{ url_for('disputes.list_disputes') }}" class="btn btn-outline-primary btn-lg hero-cta-secondary">Browse Disputes</a>
+        {% else %}
+        <a href="{{ url_for('disputes.list_disputes') }}" class="btn btn-primary btn-lg hero-cta">Browse Disputes</a>
+        {% endif %}
+    </div>
+</section>
+
+<section class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card h-100 step-card">
+            <div class="card-body">
+                <h5><i class="bi bi-send me-2"></i>1. Submit</h5>
+                <p class="mb-0">Two users submit opposing arguments with structured evidence.</p>
+                <div class="step-preview mt-3"><i class="bi bi-file-earmark-text"></i> Claim + rebuttal draft</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 step-card">
+            <div class="card-body">
+                <h5><i class="bi bi-cpu me-2"></i>2. Analyze</h5>
+                <p class="mb-0">ML evaluates toxicity, sarcasm, and sentiment signals.</p>
+                <div class="step-preview mt-3"><i class="bi bi-bar-chart"></i> Civility + clarity signals</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 step-card">
+            <div class="card-body">
+                <h5><i class="bi bi-award me-2"></i>3. Verdict</h5>
+                <p class="mb-0">OpenRouter LLM returns a logic-first verdict with clear explanation.</p>
+                <div class="step-preview mt-3"><i class="bi bi-patch-check"></i> Winner + confidence + reasoning</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="trust-strip mb-4">
+    <span><i class="bi bi-shield-check"></i> Logic-first judging</span>
+    <span><i class="bi bi-cpu"></i> ML signals: toxicity, sarcasm, sentiment</span>
+    <span><i class="bi bi-stars"></i> LLM reasoning via OpenRouter</span>
+    <span><i class="bi bi-eye"></i> Explainable verdicts with confidence</span>
+</section>
+
+<section class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">Live Courtroom Stats</h5>
+        <div class="row text-center">
+            <div class="col-md-4 mb-2 mb-md-0">
+                <div class="stat-box">
+                    <div class="stat-icon"><i class="bi bi-bank"></i></div>
+                    <div class="stat-number" data-target="{{ stats.total_disputes if stats else 0 }}">0</div>
+                    <div>Total Disputes</div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-2 mb-md-0">
+                <div class="stat-box">
+                    <div class="stat-icon"><i class="bi bi-cpu"></i></div>
+                    <div class="stat-number" data-target="{{ stats.total_verdicts if stats else 0 }}">0</div>
+                    <div>Verdicts Given</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-box">
+                    <div class="stat-icon"><i class="bi bi-people"></i></div>
+                    <div class="stat-number" data-target="{{ stats.total_users if stats else 0 }}">0</div>
+                    <div>Registered Users</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="card mb-4">
+    <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h5 class="card-title mb-0">Recent verdicts</h5>
+            <a href="{{ url_for('disputes.list_disputes') }}" class="small text-decoration-none">View all &rarr;</a>
+        </div>
+        {% if recent_disputes %}
+        <div class="row g-3">
+            {% for dispute in recent_disputes[:6] %}
+            <div class="col-md-6 col-xl-4">
+                <div class="verdict-card h-100 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+                        <h6 class="mb-0 me-2 flex-grow-1">{{ dispute.title }}</h6>
+                        <div class="d-flex gap-1 align-items-center">
+                            <span class="card-mode-icon" title="{{ 'Private' if dispute.moderation_mode == 'private' else 'Public' }}">
+                                {% if dispute.moderation_mode == 'private' %}
+                                <i class="bi bi-lock-fill text-secondary"></i>
+                                {% else %}
+                                <i class="bi bi-globe2 text-info"></i>
+                                {% endif %}
+                            </span>
+                            <span class="status-pill-mini status-{{ dispute.status }}">{{ dispute.status|capitalize }}</span>
+                            {% if dispute.moderation_mode == 'private' %}
+                            <span class="badge text-bg-secondary" style="font-size: 0.75rem;"><i class="bi bi-lock"></i> Private</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="case-vs mb-3">
+                        <span class="user-chip-mini user-chip-a">{{ (dispute.creator.username[:2] if dispute.creator else 'NA')|upper }}</span>
+                        <span class="mx-1 text-muted tiny">vs</span>
+                        <span class="user-chip-mini user-chip-b">{{ (dispute.invited.username[:2] if dispute.invited else 'NA')|upper }}</span>
+                    </div>
+
+                    {% if dispute.ai_result %}
+                    <div class="d-flex justify-content-between align-items-center mb-3 tiny">
+                        <span>Winner: <span class="winner-mini">{{ dispute.ai_result.winner.username if dispute.ai_result.winner else 'Unknown' }}</span></span>
+                        <span class="text-muted">{{ (dispute.ai_result.confidence_score|float * 100)|round|int }}% conf</span>
+                    </div>
+                    <a href="{{ url_for('disputes.get_verdict', dispute_id=dispute.id) }}" class="btn btn-outline-primary w-100 mt-auto">View verdict</a>
+                    {% else %}
+                    <div class="mb-3 tiny waiting-mini">Waiting for submissions...</div>
+                    <a href="{{ url_for('disputes.get_dispute', dispute_id=dispute.id) }}" class="btn btn-outline-primary w-100 mt-auto">Watch dispute</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="mb-0 text-muted">No disputes yet. Browse disputes as they appear.</p>
+        {% endif %}
+    </div>
+</section>
+
+<section class="home-bottom-cta text-center p-4 p-md-5 rounded mb-2">
+    <p class="hero-kicker mb-2">Ready To Start?</p>
+    {% if current_user.is_authenticated and current_user.role == 'disputant' %}
+    <h4 class="mb-3">Launch your first dispute and get a transparent AI verdict.</h4>
+    <div class="d-flex justify-content-center gap-2 flex-wrap">
+        <a href="{{ url_for('disputes.create_dispute_page') }}" class="btn btn-primary btn-lg hero-cta">Create Dispute</a>
+        <a href="{{ url_for('disputes.statistics_page') }}" class="btn btn-outline-primary btn-lg hero-cta-secondary">View Stats</a>
+    </div>
+    {% elif current_user.is_authenticated and current_user.role == 'admin' %}
+    <h4 class="mb-3">Review flagged disputes, appeals, and platform activity.</h4>
+    <div class="d-flex justify-content-center gap-2 flex-wrap">
+        <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-primary btn-lg hero-cta">Open Admin Panel</a>
+        <a href="{{ url_for('disputes.statistics_page') }}" class="btn btn-outline-primary btn-lg hero-cta-secondary">View Stats</a>
+    </div>
+    {% else %}
+    <h4 class="mb-3">Observe public arguments, verdicts, and community reactions.</h4>
+    <div class="d-flex justify-content-center gap-2 flex-wrap">
+        <a href="{{ url_for('disputes.list_disputes') }}" class="btn btn-primary btn-lg hero-cta">Browse Disputes</a>
+        <a href="{{ url_for('disputes.statistics_page') }}" class="btn btn-outline-primary btn-lg hero-cta-secondary">View Stats</a>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

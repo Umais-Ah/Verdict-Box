@@ -1,0 +1,341 @@
+{% extends 'base.html' %}
+{% block content %}
+{% if disputes is defined %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h3 class="mb-0">Disputes</h3>
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+        <form method="GET" class="d-flex align-items-center gap-2">
+            <input type="text" name="search" class="form-control form-control-sm" placeholder="Search disputes..." value="{{ search_term or '' }}" style="width: 200px;">
+            <button type="submit" class="btn btn-sm btn-outline-primary"><i class="bi bi-search"></i></button>
+            {% if search_term %}
+            <a href="{{ url_for('disputes.list_disputes') }}" class="btn btn-sm btn-outline-secondary">Clear</a>
+            {% endif %}
+            <select name="sort" class="form-select form-select-sm" onchange="this.form.submit()" style="width: auto;">
+                <option value="popular" {{ 'selected' if sort_by == 'popular' else '' }}>Most Popular</option>
+                <option value="recent" {{ 'selected' if sort_by == 'recent' else '' }}>Most Recent</option>
+                <option value="discussed" {{ 'selected' if sort_by == 'discussed' else '' }}>Most Discussed</option>
+            </select>
+        </form>
+    </div>
+</div>
+<div class="d-flex gap-2 mb-3" id="disputeFeedTabs">
+    <button class="btn btn-sm btn-outline-primary" id="tabPublic">Public Feed</button>
+    <button class="btn btn-sm btn-outline-secondary" id="tabPrivate">My Private Cases</button>
+</div>
+
+<div class="row g-3" id="disputeFeedRows">
+    {% for card in feed_cards %}
+        {% set d = card.dispute %}
+        {# Only render private disputes if the current user is a participant or an admin #}
+        {% set is_participant = (current_user.is_authenticated and ((d.creator and current_user.id == d.creator.id) or (d.invited and current_user.id == d.invited.id))) %}
+        {% set can_view_private = is_participant or (current_user.is_authenticated and current_user.role == 'admin') %}
+        {% if d.moderation_mode != 'private' or can_view_private %}
+        <div class="col-md-6" data-moderation="{{ 'private' if d.moderation_mode == 'private' else 'public' }}">
+            <div class="card dispute-list-card h-100">
+                <div class="card-body d-flex flex-column gap-2">
+                    <div class="d-flex justify-content-between align-items-start gap-2">
+                        <h5 class="mb-0 feed-card-title">{{ d.title }}</h5>
+                        <div class="d-flex gap-1 align-items-center">
+                            <span class="card-mode-icon">
+                                {% if d.moderation_mode == 'private' %}
+                                <i class="bi bi-lock-fill text-secondary" title="Private"></i>
+                                {% else %}
+                                <i class="bi bi-globe2 text-info" title="Public"></i>
+                                {% endif %}
+                            </span>
+                            <span class="badge status-pill status-{{ d.status }}">{{ 'Verdict' if d.status == 'resolved' else 'Pending' }}</span>
+                        </div>
+                    </div>
+
+                    <div class="small text-muted">
+                        {{ d.creator.username if d.creator else 'Unknown' }} vs {{ d.invited.username if d.invited else 'Unknown' }}
+                    </div>
+
+                    <div class="feed-metrics-row">
+                        <span class="feed-metric"><i class="bi bi-hand-thumbs-up"></i> <span id="feedUp{{ d.id }}">{{ card.upvotes }}</span></span>
+                        <span class="feed-metric"><i class="bi bi-hand-thumbs-down"></i> <span id="feedDown{{ d.id }}">{{ card.downvotes }}</span></span>
+                        <span class="feed-metric"><i class="bi bi-chat-left-text"></i> {{ card.comments_count }}</span>
+                        <span class="feed-metric feed-score">Score: <span id="feedScore{{ d.id }}">{{ card.score }}</span></span>
+                    </div>
+
+                    {% if current_user.is_authenticated and current_user.role == 'spectator' %}
+                    <div class="d-flex gap-2 flex-wrap" data-feed-vote-form data-dispute-id="{{ d.id }}">
+                        <button type="button" class="btn btn-sm {{ 'btn-success' if card.user_vote == 1 else 'btn-outline-success' }} feed-vote-btn" data-value="1">
+                            <i class="bi bi-hand-thumbs-up"></i> Upvote Dispute
+                        </button>
+                        <button type="button" class="btn btn-sm {{ 'btn-danger' if card.user_vote == -1 else 'btn-outline-danger' }} feed-vote-btn" data-value="-1">
+                            <i class="bi bi-hand-thumbs-down"></i> Downvote Dispute
+                        </button>
+                    </div>
+                    {% endif %}
+
+                    <div class="mt-1">
+                        <a class="btn btn-outline-primary btn-sm" href="{{ url_for('disputes.get_dispute', dispute_id=d.id) }}">View Dispute</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+        document.addEventListener('DOMContentLoaded', function(){
+            const tabPublic = document.getElementById('tabPublic');
+            const tabPrivate = document.getElementById('tabPrivate');
+            const feedRows = document.getElementById('disputeFeedRows');
+
+            function showMode(mode){
+                const cols = feedRows.querySelectorAll('[data-moderation]');
+                cols.forEach(col=>{
+                    const cardMode = col.getAttribute('data-moderation');
+                    if(mode === 'all' || cardMode === mode) col.style.display = '';
+                    else col.style.display = 'none';
+                });
+            }
+
+            tabPublic.addEventListener('click', ()=>{
+                showMode('public');
+                tabPublic.classList.remove('btn-outline-primary'); tabPublic.classList.add('btn-primary');
+                tabPrivate.classList.remove('btn-primary'); tabPrivate.classList.add('btn-outline-secondary');
+            });
+            tabPrivate.addEventListener('click', ()=>{
+                showMode('private');
+                tabPrivate.classList.remove('btn-outline-secondary'); tabPrivate.classList.add('btn-primary');
+                tabPublic.classList.remove('btn-primary'); tabPublic.classList.add('btn-outline-primary');
+            });
+
+            // default: show public feed
+            showMode('public');
+            tabPublic.classList.remove('btn-outline-primary'); tabPublic.classList.add('btn-primary');
+        });
+        </script>
+        {% endif %}
+            {% else %}
+                <div class="col-12"><div class="card"><div class="card-body text-muted">No disputes available.</div></div></div>
+            {% endfor %}
+        </div>
+{% else %}
+<div class="card mb-3">
+    <div class="card-body">
+        <h3>{{ dispute.title }}</h3>
+        <p class="text-muted mb-0">Status: <strong>{{ dispute.status }}</strong>
+        {% if dispute.moderation_mode == 'private' %}
+        <span class="badge text-bg-secondary ms-2"><i class="bi bi-lock"></i> Private Dispute (Invite-only)</span>
+        {% else %}
+        <span class="badge text-bg-light ms-2"><i class="bi bi-globe"></i> Public Dispute</span>
+        {% endif %}
+        </p>
+        {% if dispute.status in ['reported', 'flagged'] %}
+        <div class="mt-2 d-flex flex-wrap gap-2 align-items-center">
+            {% if dispute.status == 'reported' %}
+            <span class="badge text-bg-warning text-dark">Reported (Under Observation)</span>
+            {% else %}
+            <span class="badge text-bg-warning text-dark">Under Review</span>
+            <span class="badge text-bg-danger">Flagged</span>
+            {% endif %}
+            <span class="badge text-bg-secondary">{{ report_summary.count }} reports</span>
+            {% if report_summary.count >= report_threshold %}
+            <span class="badge text-bg-danger">Escalated to admin review</span>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% if report_summary.count %}
+        <div class="report-summary-box mt-3">
+            <div class="small text-uppercase text-muted mb-2">Report Reasons</div>
+            <div class="d-flex flex-wrap gap-1">
+                {% for reason in report_summary.reasons[:6] %}
+                <span class="badge text-bg-light border">{{ report_reason_labels.get(reason, reason|replace('_', ' ')|title) }}</span>
+                {% endfor %}
+            </div>
+            <div class="small text-muted mt-2">
+                {% for report in report_summary.rows[:3] %}
+                <div>@{{ report.reporter.username if report.reporter else 'Unknown' }} reported: {{ report.details or report_reason_labels.get(report.reason, report.reason|replace('_', ' ')|title) }}</div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        {% if latest_appeal and latest_appeal.status == 'approved' %}
+        <div class="alert alert-success mt-3 mb-0">
+            Appeal approved. The dispute has been reopened for review.
+            <div class="mt-2"><span class="badge text-bg-warning text-dark">Result changed via Moderator Appeal.</span></div>
+            {% if latest_appeal.admin_response %}
+            <div class="small mt-1">Admin response: {{ latest_appeal.admin_response }}</div>
+            {% endif %}
+        </div>
+        {% elif latest_appeal and latest_appeal.status == 'rejected' %}
+        <div class="alert alert-secondary mt-3 mb-0">
+            Appeal rejected. The original decision still stands.
+            {% if latest_appeal.admin_response %}
+            <div class="small mt-1">Admin response: {{ latest_appeal.admin_response }}</div>
+            {% endif %}
+        </div>
+        {% endif %}
+        <div
+            id="disputeLiveState"
+            data-dispute-id="{{ dispute.id }}"
+            data-status="{{ dispute.status }}"
+            data-submissions-count="{{ submissions|length }}"
+            class="d-none"
+        ></div>
+    </div>
+</div>
+
+{% if current_user.is_authenticated and current_user.role == 'spectator' and current_user.id not in [dispute.created_by, dispute.invited_user] %}
+{% if dispute.moderation_mode == 'public' %}
+<div class="card mb-3 report-dispute-card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+            <div>
+                <h5 class="mb-1">Report Dispute</h5>
+                <div class="small text-muted">Reports are counted toward moderation when they reach the threshold.</div>
+            </div>
+            <span class="badge text-bg-warning text-dark">Threshold: {{ report_threshold }}</span>
+        </div>
+        <form id="reportDisputeForm" data-dispute-id="{{ dispute.id }}">
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <select class="form-select" name="reason" required>
+                        {% for key, label in report_reason_labels.items() %}
+                        <option value="{{ key }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-8">
+                    <input class="form-control" name="details" maxlength="500" placeholder="Optional details for the moderator...">
+                </div>
+            </div>
+            <div class="mt-2 d-flex justify-content-end">
+                <button class="btn btn-outline-danger" type="submit">Submit Report</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% else %}
+<div class="card mb-3 report-dispute-card border-secondary">
+    <div class="card-body text-center">
+        <i class="bi bi-shield-check text-muted" style="font-size: 1.5rem;"></i>
+        <h5 class="mt-2">Private Dispute - No Reporting</h5>
+        <p class="text-muted mb-0">Reports are disabled for private disputes. Contact an admin directly if there are moderation concerns.</p>
+    </div>
+</div>
+{% endif %}
+{% endif %}
+
+<div class="submission-compare-grid mb-3 {% if submissions|length == 1 %}single-entry{% endif %}">
+    {% for s in submissions %}
+        <article class="card h-100 submission-compare-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="mb-0">{{ s.user.username }}</h6>
+                    <span class="badge text-bg-light border">{{ 'Side A' if loop.index0 == 0 else 'Side B' }}</span>
+                </div>
+                <p class="mb-0">{{ s.argument_text }}</p>
+            </div>
+        </article>
+    {% endfor %}
+</div>
+
+{% if dispute.status == 'flagged' %}
+<div class="alert alert-danger">This dispute is flagged due to toxicity threshold.</div>
+{% endif %}
+
+{% if current_user.is_authenticated and current_user.role == 'disputant' and current_user.id in [dispute.created_by, dispute.invited_user] and dispute.status in ['waiting', 'active'] %}
+    {% set submitted_ids = submissions | map(attribute='user_id') | list %}
+    {% if current_user.id not in submitted_ids %}
+    <div class="card" id="submitArgumentCard">
+        <div class="card-body">
+            <h5>Submit Your Argument</h5>
+            <form id="submitArgumentForm" data-dispute-id="{{ dispute.id }}">
+                <textarea class="form-control mb-2" id="argumentText" name="argument_text" rows="6" required></textarea>
+                <div class="small text-muted mb-2">Words: <span id="wordCount">0</span></div>
+                <button class="btn btn-primary" type="submit">Submit Argument</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card d-none" id="caseReviewPanel">
+        <div class="card-body">
+            <div class="d-flex align-items-center mb-2">
+                <div class="review-loader-icon me-2"><i class="bi bi-cpu"></i></div>
+                <div>
+                    <h5 class="mb-0">Case Under Review</h5>
+                    <div class="small text-muted">Your submission is secure. VerdictBox is processing this case.</div>
+                </div>
+            </div>
+
+            <ul class="review-steps list-unstyled mb-3">
+                <li class="review-step is-done" data-review-step="received"><span class="review-step-icon">✅</span>Arguments Received...</li>
+                <li class="review-step" data-review-step="sentiment"><span class="review-step-icon">⏳</span>Analyzing Sentiment &amp; Tone...</li>
+                <li class="review-step" data-review-step="fallacies"><span class="review-step-icon">⏳</span>Scanning for Logical Fallacies...</li>
+                <li class="review-step" data-review-step="constitution"><span class="review-step-icon">⏳</span>Consulting Digital Constitution...</li>
+            </ul>
+
+            <div id="reviewStatusMessage" class="alert alert-info mb-0">Processing in progress. Please wait...</div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card" id="caseReviewPanel">
+        <div class="card-body">
+            <div class="d-flex align-items-center mb-2">
+                <div class="review-loader-icon me-2"><i class="bi bi-cpu"></i></div>
+                <div>
+                    <h5 class="mb-0">Case Under Review</h5>
+                    {% if submissions|length < 2 %}
+                    <div class="small text-muted">Your argument is submitted. Waiting for the other disputant.</div>
+                    {% else %}
+                    <div class="small text-muted">Both arguments are now visible. VerdictBox is finalizing the judgment.</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <ul class="review-steps list-unstyled mb-3">
+                <li class="review-step is-done" data-review-step="received"><span class="review-step-icon">✅</span>Arguments Received...</li>
+                {% if submissions|length < 2 %}
+                <li class="review-step is-pending" data-review-step="sentiment"><span class="review-step-icon">•</span>Analyzing Sentiment &amp; Tone...</li>
+                <li class="review-step is-pending" data-review-step="fallacies"><span class="review-step-icon">•</span>Scanning for Logical Fallacies...</li>
+                <li class="review-step is-pending" data-review-step="constitution"><span class="review-step-icon">•</span>Consulting Digital Constitution...</li>
+                {% else %}
+                <li class="review-step is-done" data-review-step="sentiment"><span class="review-step-icon">✅</span>Analyzing Sentiment &amp; Tone...</li>
+                <li class="review-step is-done" data-review-step="fallacies"><span class="review-step-icon">✅</span>Scanning for Logical Fallacies...</li>
+                <li class="review-step is-active" data-review-step="constitution"><span class="review-step-icon">⏳</span>Consulting Digital Constitution...</li>
+                {% endif %}
+            </ul>
+
+            {% if submissions|length < 2 %}
+            <div id="reviewStatusMessage" class="alert alert-info mb-0">Submission confirmed. Waiting for the other disputant...</div>
+            {% else %}
+            <div id="reviewStatusMessage" class="alert alert-info mb-0">Processing in progress. Please wait...</div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+{% endif %}
+
+<div class="card mt-3">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="mb-0">Public Comments</h5>
+            <span class="badge text-bg-secondary" id="commentCountBadge">{{ comments|length if comments is defined else 0 }}</span>
+        </div>
+
+        <form id="commentForm" data-dispute-id="{{ dispute.id }}" class="mb-3">
+            <textarea class="form-control mb-2" id="commentText" name="body" rows="3" maxlength="1000" placeholder="Share your view on this dispute..."></textarea>
+            <button class="btn btn-outline-primary" type="submit">Post Comment</button>
+        </form>
+
+        <div id="commentList" class="comment-list">
+            {% if comments %}
+                {% for c in comments %}
+                    <div class="comment-item" data-comment-id="{{ c.id }}">
+                        <div class="comment-meta">
+                            <strong>@{{ c.author.username if c.author else 'Unknown' }}</strong>
+                            <span class="text-muted small">{{ c.created_at.strftime('%b %d, %Y %I:%M %p') if c.created_at else '' }}</span>
+                        </div>
+                        <div class="comment-body">{{ c.body }}</div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div id="commentEmptyState" class="text-muted">No comments yet. Be the first to react.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

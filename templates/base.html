@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VerdictBox</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+</head>
+<body class="vb-app-shell">
+<nav class="navbar navbar-expand-lg border-bottom vb-navbar">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="{{ url_for('auth.home') }}"><i class="bi bi-bank2 me-1"></i>VerdictBox</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navMenu">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == 'auth.home' else '' }}" href="{{ url_for('auth.home') }}">Home</a></li>
+                <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('disputes.') else '' }}" href="{{ url_for('disputes.list_disputes') }}">Disputes</a></li>
+                <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == 'disputes.leaderboard_page' else '' }}" href="{{ url_for('disputes.leaderboard_page') }}">Leaderboard</a></li>
+                <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == 'disputes.statistics_page' else '' }}" href="{{ url_for('disputes.statistics_page') }}">Statistics</a></li>
+                {% if current_user.is_authenticated and current_user.role == 'disputant' %}
+                <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == 'auth.dashboard' else '' }}" href="{{ url_for('auth.dashboard') }}">Dashboard</a></li>
+                {% elif current_user.is_authenticated and current_user.role == 'admin' %}
+                <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin.') else '' }}" href="{{ url_for('admin.admin_dashboard') }}">Admin</a></li>
+                {% endif %}
+            </ul>
+            <div class="d-flex align-items-center nav-controls-wrap">
+                {% if current_user.is_authenticated %}
+                    {% if current_user.role != 'admin' %}
+                    <form id="roleSwitchForm" class="role-segmented" data-role-switch-form>
+                        <input type="hidden" name="role" value="{{ current_user.role }}">
+                        <button
+                            type="button"
+                            class="role-segment-btn {{ 'active' if current_user.role == 'spectator' else '' }}"
+                            data-role-value="spectator"
+                            aria-pressed="{{ 'true' if current_user.role == 'spectator' else 'false' }}"
+                        >
+                            Spectator
+                        </button>
+                        <button
+                            type="button"
+                            class="role-segment-btn {{ 'active' if current_user.role == 'disputant' else '' }}"
+                            data-role-value="disputant"
+                            aria-pressed="{{ 'true' if current_user.role == 'disputant' else 'false' }}"
+                        >
+                            Disputant
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    <div class="nav-identity">
+                        <span class="nav-online-dot" aria-hidden="true"></span>
+                        <span class="nav-identity-text"><i class="bi bi-person me-1"></i>@{{ current_user.username }}</span>
+                    </div>
+
+                    <div class="nav-actions-group">
+                        <div class="dropdown nav-notification">
+                            <button class="btn btn-sm nav-ghost-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-bell"></i>
+                                {% if nav_unread_count %}
+                                <span class="nav-badge">{{ nav_unread_count }}</span>
+                                {% endif %}
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end nav-notification-menu">
+                                <div class="dropdown-header text-muted">Notifications</div>
+                                {% if nav_notifications %}
+                                    {% for note in nav_notifications %}
+                                        <div class="dropdown-item">
+                                            <div class="nav-note-title">{{ note.title }}</div>
+                                            <div class="nav-note-body">{{ note.body }}</div>
+                                            <div class="nav-note-time" data-created-at="{{ note.created_at.isoformat() if note.created_at else '' }}">{{ note.created_at }}</div>
+                                        </div>
+                                    {% endfor %}
+                                    <button class="dropdown-item text-center nav-note-clear" type="button">Mark all read</button>
+                                {% else %}
+                                    <div class="dropdown-item text-muted small">No new notifications</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <a class="btn btn-sm nav-ghost-btn" href="{{ url_for('auth.profile', username=current_user.username) }}">Profile</a>
+                        <a class="btn btn-sm nav-subtle-btn" href="{{ url_for('auth.logout') }}">Logout</a>
+                    </div>
+                {% else %}
+                    <a class="btn btn-outline-primary btn-sm" href="{{ url_for('auth.login_page') }}">Login</a>
+                    <a class="btn btn-primary btn-sm" href="{{ url_for('auth.register_page') }}">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main class="container py-4 vb-page-fade vb-main">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="border-top py-3 vb-footer mt-auto">
+    <div class="container text-muted small">VerdictBox Team | University Project</div>
+</footer>
+
+<div id="globalToastStack" class="toast-container position-fixed top-0 end-0 p-3 vb-toast-stack" aria-live="polite" aria-atomic="true"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
