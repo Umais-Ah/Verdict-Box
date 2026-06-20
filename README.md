@@ -1,7 +1,7 @@
 # VerdictBox — AI Moderation & Debate Platform
 
 <p align="center">
-  <img src="docs/assets/banner.svg" alt="VerdictBox Banner" width="100%">
+  <img src="https://github.com/user-attachments/assets/64327f5a-e470-4de6-a909-b3a44345005d" alt="VerdictBox Banner" width="100%">
 </p>
 
 <p align="center">
