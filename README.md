@@ -35,9 +35,7 @@ VerdictBox is a web-based debate and moderation platform that leverages machine 
 
 ## Demo
 
-Run locally and open `http://localhost:5000` for a full preview.
-
-
+https://github.com/user-attachments/assets/454e4a9f-35ce-49c9-b22c-9530e98d18b9
 
 ---
 
